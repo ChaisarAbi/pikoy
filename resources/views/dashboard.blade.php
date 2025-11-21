@@ -127,7 +127,36 @@
         // Fetch dashboard data
         async function fetchDashboardData() {
             try {
-                // Fetch stats
+                // Fetch dashboard stats
+                const dashboardRes = await fetch('/api/dashboard/stats');
+                const dashboardData = await dashboardRes.json();
+
+                const stats = dashboardData.stats;
+                const recentPredictions = dashboardData.recent_predictions;
+                const predictionDistribution = dashboardData.prediction_distribution;
+
+                // Update stats
+                document.getElementById('totalPatients').textContent = stats.total_patients || 0;
+                document.getElementById('totalExaminations').textContent = stats.total_examinations || 0;
+                document.getElementById('totalModels').textContent = stats.total_models || 0;
+                document.getElementById('totalPredictions').textContent = stats.total_predictions || 0;
+
+                // Update recent predictions
+                updateRecentPredictions(recentPredictions || []);
+
+                // Update chart
+                updatePredictionChart(predictionDistribution || { diabetes: 0, normal: 0 });
+
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                // Fallback to individual API calls
+                fetchFallbackData();
+            }
+        }
+
+        // Fallback method if dashboard API fails
+        async function fetchFallbackData() {
+            try {
                 const [patientsRes, examinationsRes, modelsRes, predictionsRes] = await Promise.all([
                     fetch('/api/patients'),
                     fetch('/api/examinations'),
@@ -153,7 +182,7 @@
                 updatePredictionChart(predictions.data || []);
 
             } catch (error) {
-                console.error('Error fetching dashboard data:', error);
+                console.error('Error fetching fallback data:', error);
             }
         }
 
@@ -181,13 +210,19 @@
             `).join('');
         }
 
-        function updatePredictionChart(predictions) {
+        function updatePredictionChart(predictionDistribution) {
             const ctx = document.getElementById('predictionChart').getContext('2d');
             
-            const diabetesCount = predictions.filter(p => p.prediction_result === 'diabetes').length;
-            const normalCount = predictions.filter(p => p.prediction_result === 'normal').length;
+            // Destroy existing chart if it exists
+            if (window.predictionChartInstance) {
+                window.predictionChartInstance.destroy();
+            }
 
-            new Chart(ctx, {
+            // Use the distribution data directly from API
+            const diabetesCount = predictionDistribution.diabetes || 0;
+            const normalCount = predictionDistribution.normal || 0;
+
+            window.predictionChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Diabetes', 'Normal'],
@@ -203,6 +238,17 @@
                     plugins: {
                         legend: {
                             position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
                         }
                     }
                 }

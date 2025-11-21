@@ -23,7 +23,7 @@ class ModelSeeder extends Seeder
             ]);
         }
 
-        // Create dummy Random Forest model
+        // Create only Random Forest model
         MlModel::create([
             'name' => 'Random Forest Diabetes Predictor',
             'algorithm' => 'random_forest',
@@ -35,32 +35,9 @@ class ModelSeeder extends Seeder
                 'min_samples_leaf' => 1,
                 'random_state' => 42
             ]),
-        ]);
-
-        // Create additional dummy models
-        MlModel::create([
-            'name' => 'Logistic Regression Baseline',
-            'algorithm' => 'logistic_regression',
-            'version' => '1.0.0',
-            'hyperparameters' => json_encode([
-                'C' => 1.0,
-                'penalty' => 'l2',
-                'solver' => 'lbfgs',
-                'max_iter' => 100
-            ]),
-        ]);
-
-        MlModel::create([
-            'name' => 'XGBoost Diabetes Classifier',
-            'algorithm' => 'xgboost',
-            'version' => '1.0.0',
-            'hyperparameters' => json_encode([
-                'n_estimators' => 150,
-                'max_depth' => 8,
-                'learning_rate' => 0.1,
-                'subsample' => 0.8,
-                'colsample_bytree' => 0.8
-            ]),
+            'accuracy' => 0.85,
+            'status' => 'active',
+            'description' => 'Random Forest model trained on diabetes dataset with 85% accuracy'
         ]);
 
         $this->command->info('Dummy ML models created successfully!');

@@ -13,7 +13,7 @@ class ModelController extends Controller
     public function index()
     {
         $models = MlModel::all();
-        return response()->json($models);
+        return response()->json(['data' => $models]);
     }
 
     /**
@@ -29,7 +29,7 @@ class ModelController extends Controller
         ]);
 
         $model = MlModel::create($validated);
-        return response()->json($model, 201);
+        return response()->json(['data' => $model], 201);
     }
 
     /**
@@ -37,7 +37,7 @@ class ModelController extends Controller
      */
     public function show(MlModel $model)
     {
-        return response()->json($model);
+        return response()->json(['data' => $model]);
     }
 
     /**
@@ -53,7 +53,7 @@ class ModelController extends Controller
         ]);
 
         $model->update($validated);
-        return response()->json($model);
+        return response()->json(['data' => $model]);
     }
 
     /**
@@ -71,7 +71,7 @@ class ModelController extends Controller
     public function trainingRuns(MlModel $model)
     {
         $trainingRuns = $model->trainingRuns()->with('datasetVersion')->get();
-        return response()->json($trainingRuns);
+        return response()->json(['data' => $trainingRuns]);
     }
 
     /**
@@ -80,6 +80,6 @@ class ModelController extends Controller
     public function predictions(MlModel $model)
     {
         $predictions = $model->predictions()->with(['patient', 'examination'])->get();
-        return response()->json($predictions);
+        return response()->json(['data' => $predictions]);
     }
 }

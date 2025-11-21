@@ -226,9 +226,14 @@
             select.innerHTML = '<option value="">Pilih pasien yang sudah terdaftar</option>';
             
             patients.forEach(patient => {
+                // Calculate age from date of birth
+                const dob = new Date(patient.dob);
+                const today = new Date();
+                const age = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+                
                 const option = document.createElement('option');
-                option.value = patient.id;
-                option.textContent = `${patient.name} (${patient.age} tahun, ${patient.gender === 'L' ? 'L' : 'P'})`;
+                option.value = patient.patient_id;
+                option.textContent = `${patient.name} (${age} tahun, ${patient.sex === 'L' ? 'L' : 'P'})`;
                 select.appendChild(option);
             });
         }
@@ -239,7 +244,7 @@
             
             models.forEach(model => {
                 const option = document.createElement('option');
-                option.value = model.id;
+                option.value = model.model_id;
                 option.textContent = `${model.name} (${model.accuracy ? (model.accuracy * 100).toFixed(1) + '%' : 'N/A'})`;
                 select.appendChild(option);
             });
@@ -250,13 +255,18 @@
             const patientId = this.value;
             if (!patientId) return;
 
-            const patient = patients.find(p => p.id == patientId);
+            const patient = patients.find(p => p.patient_id == patientId);
             if (patient) {
+                // Calculate age from date of birth
+                const dob = new Date(patient.dob);
+                const today = new Date();
+                const age = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+                
                 document.querySelector('input[name="name"]').value = patient.name;
-                document.querySelector('input[name="age"]').value = patient.age;
-                document.querySelector('select[name="gender"]').value = patient.gender;
-                document.querySelector('input[name="bmi"]').value = patient.bmi;
-                document.querySelector('input[name="blood_glucose"]').value = patient.blood_glucose;
+                document.querySelector('input[name="age"]').value = age;
+                document.querySelector('select[name="gender"]').value = patient.sex;
+                document.querySelector('input[name="bmi"]').value = patient.bmi || '';
+                document.querySelector('input[name="blood_glucose"]').value = patient.blood_glucose || '';
             }
         });
 
@@ -287,9 +297,19 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify(data)
                 });
+
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Non-JSON response:', text);
+                    throw new Error('Server mengembalikan response yang tidak valid. Silakan coba lagi.');
+                }
 
                 const result = await response.json();
 
@@ -297,7 +317,7 @@
                     currentPrediction = result;
                     displayPredictionResult(result);
                 } else {
-                    throw new Error(result.message || 'Gagal membuat prediksi');
+                    throw new Error(result.error || result.message || 'Gagal membuat prediksi');
                 }
             } catch (error) {
                 console.error('Error making prediction:', error);
@@ -342,7 +362,7 @@
         }
 
         function getModelName(modelId) {
-            const model = models.find(m => m.id == modelId);
+            const model = models.find(m => m.model_id == modelId);
             return model ? model.name : 'Unknown Model';
         }
 

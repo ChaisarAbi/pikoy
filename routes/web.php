@@ -32,7 +32,8 @@ Route::get('/patients/create', function () {
 });
 
 Route::get('/patients/{id}', function ($id) {
-    return view('patients.show', ['id' => $id]);
+    $patient = \App\Models\Patient::findOrFail($id);
+    return view('patients.show', ['patient' => $patient]);
 });
 
 // Predictions

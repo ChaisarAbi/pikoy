@@ -15,11 +15,15 @@ class MlModel extends Model
         'name',
         'algorithm',
         'version',
-        'hyperparameters'
+        'hyperparameters',
+        'accuracy',
+        'status',
+        'description'
     ];
 
     protected $casts = [
         'hyperparameters' => 'array',
+        'accuracy' => 'decimal:4',
     ];
 
     /**

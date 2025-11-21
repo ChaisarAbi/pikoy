@@ -6,6 +6,7 @@ use App\Http\Controllers\DatasetController;
 use App\Http\Controllers\ModelController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\PredictionController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -50,3 +51,9 @@ Route::apiResource('predictions', PredictionController::class);
 Route::post('predict', [PredictionController::class, 'predict']);
 Route::get('patients/{patientId}/predictions', [PredictionController::class, 'byPatient']);
 Route::get('training-runs/{trainingRun}/predictions', [PredictionController::class, 'byTrainingRun']);
+
+// Dashboard Routes
+Route::get('dashboard/stats', [DashboardController::class, 'stats']);
+Route::get('dashboard/system-stats', [DashboardController::class, 'systemStats']);
+Route::get('patients/{patientId}/stats', [DashboardController::class, 'patientStats']);
+Route::get('models/{modelId}/stats', [DashboardController::class, 'modelStats']);

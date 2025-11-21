@@ -180,32 +180,39 @@
             loadingState.classList.add('hidden');
             emptyState.classList.add('hidden');
 
-            tbody.innerHTML = patientsToRender.map(patient => `
+                    tbody.innerHTML = patientsToRender.map(patient => {
+                        // Calculate age from dob
+                        const dob = new Date(patient.dob);
+                        const today = new Date();
+                        const age = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+                        
+                        return `
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${patient.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${patient.patient_id}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${patient.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${patient.age} tahun</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${age} tahun</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span class="px-2 py-1 text-xs rounded-full ${
-                            patient.gender === 'L' 
-                                ? 'bg-blue-100 text-blue-800' 
+                            patient.sex === 'L'
+                                ? 'bg-blue-100 text-blue-800'
                                 : 'bg-pink-100 text-pink-800'
                         }">
-                            ${patient.gender === 'L' ? 'Laki-laki' : 'Perempuan'}
+                            ${patient.sex === 'L' ? 'Laki-laki' : 'Perempuan'}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${patient.bmi}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${patient.blood_glucose} mg/dL</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${patient.bmi || 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${patient.blood_glucose || 'N/A'} mg/dL</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="viewPatientDetails(${patient.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                        <button onclick="viewPatientDetails(${patient.patient_id})" class="text-blue-600 hover:text-blue-900 mr-3">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button onclick="deletePatient(${patient.id})" class="text-red-600 hover:text-red-900">
+                        <button onclick="deletePatient(${patient.patient_id})" class="text-red-600 hover:text-red-900">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function showLoading() {
@@ -229,27 +236,56 @@
         async function addPatient() {
             const form = document.getElementById('addPatientForm');
             const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
+            const rawData = Object.fromEntries(formData);
+            
+            // Convert form data to match API requirements
+            const data = {
+                nik: generateNIK(), // Generate NIK automatically
+                name: rawData.name,
+                dob: calculateDOB(parseInt(rawData.age)), // Convert age to date of birth
+                sex: rawData.gender,
+                address: "Alamat belum diisi", // Default address
+                bmi: parseFloat(rawData.bmi),
+                blood_glucose: parseFloat(rawData.blood_glucose)
+            };
 
             try {
                 const response = await fetch('/api/patients', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(data)
                 });
 
+                const result = await response.json();
+
                 if (response.ok) {
                     hideAddPatientModal();
                     fetchPatients(); // Refresh the list
+                    alert('Pasien berhasil ditambahkan');
                 } else {
-                    throw new Error('Gagal menambahkan pasien');
+                    throw new Error(result.message || 'Gagal menambahkan pasien');
                 }
             } catch (error) {
                 console.error('Error adding patient:', error);
-                showError('Gagal menambahkan pasien');
+                showError('Gagal menambahkan pasien: ' + error.message);
             }
+        }
+
+        // Helper function to generate NIK automatically
+        function generateNIK() {
+            const timestamp = Date.now().toString();
+            return 'P' + timestamp.slice(-11);
+        }
+
+        // Helper function to calculate date of birth from age
+        function calculateDOB(age) {
+            const today = new Date();
+            const birthYear = today.getFullYear() - age;
+            const dob = new Date(birthYear, today.getMonth(), today.getDate());
+            return dob.toISOString().split('T')[0]; // Format as YYYY-MM-DD
         }
 
         function viewPatientDetails(patientId) {
@@ -288,8 +324,8 @@
 
                 const filtered = patients.filter(patient => {
                     const matchesSearch = patient.name.toLowerCase().includes(searchTerm) ||
-                                         patient.id.toString().includes(searchTerm);
-                    const matchesGender = !genderValue || patient.gender === genderValue;
+                                         patient.patient_id.toString().includes(searchTerm);
+                    const matchesGender = !genderValue || patient.sex === genderValue;
                     
                     return matchesSearch && matchesGender;
                 });
