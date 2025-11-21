@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: diabetes-prediction-app
+    container_name: diabetes-prediction-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    networks:
+      - diabetes-network
+
+  webserver:
+    image: nginx:alpine
+    container_name: diabetes-prediction-webserver
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - diabetes-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: diabetes-prediction-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: diabetes_prediction
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_USER: diabetes_user
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - diabetes-network
+
+volumes:
+  dbdata:
+    driver: local
+
+networks:
+  diabetes-network:
+    driver: bridge
