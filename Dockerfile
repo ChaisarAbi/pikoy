@@ -51,11 +51,8 @@ RUN if [ ! -f .env ]; then \
         php artisan key:generate; \
     fi
 
-# Cache Laravel for production
-RUN php artisan storage:link \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# Create storage link (this doesn't depend on environment)
+RUN php artisan storage:link
 
 # Expose port 80 for Nginx
 EXPOSE 80
