@@ -47,7 +47,7 @@ RUN composer install --no-dev --optimize-autoloader
 
 # Generate application key if not exists
 RUN if [ ! -f .env ]; then \
-        cp .env.example .env && \
+        cp .env.dokploy .env 2>/dev/null || cp .env.example .env; \
         php artisan key:generate; \
     fi
 
