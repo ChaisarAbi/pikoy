@@ -34,11 +34,7 @@ RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage /var/www/bootstrap/cache \
     && mkdir -p /var/www/database \
     && chown www-data:www-data /var/www/database \
-    && chmod 775 /var/www/database \
-    && php artisan storage:link \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+    && chmod 775 /var/www/database
 
 # Copy Nginx configuration
 COPY docker/nginx/conf.d/app.conf /etc/nginx/sites-available/default
@@ -54,6 +50,12 @@ RUN if [ ! -f .env ]; then \
         cp .env.example .env; \
         php artisan key:generate; \
     fi
+
+# Cache Laravel for production
+RUN php artisan storage:link \
+    && php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
 
 # Expose port 80 for Nginx
 EXPOSE 80
