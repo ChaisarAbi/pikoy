@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Patient;
+use App\Models\Examination;
 use Illuminate\Http\Request;
 
 class PatientController extends Controller
@@ -79,6 +80,9 @@ class PatientController extends Controller
      */
     public function destroy(Patient $patient)
     {
+        // Delete related examinations first to avoid foreign key constraint violation
+        Examination::where('patient_id', $patient->patient_id)->delete();
+        
         $patient->delete();
         return response()->json(null, 204);
     }
