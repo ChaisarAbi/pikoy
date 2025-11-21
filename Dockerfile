@@ -29,9 +29,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy application
 COPY . /var/www
 
-# Set permissions
+# Set permissions and create database directory
 RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache \
+    && mkdir -p /var/www/database \
+    && chown www-data:www-data /var/www/database \
+    && chmod 775 /var/www/database
 
 # Copy Nginx configuration
 COPY docker/nginx/conf.d/app.conf /etc/nginx/sites-available/default

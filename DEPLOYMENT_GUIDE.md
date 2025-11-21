@@ -21,17 +21,17 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://pikoy.aventra.my.id
 
-# Database Configuration (Required)
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=pikoy
-DB_USERNAME=pikoy_user
-DB_PASSWORD=your_secure_password_here
+# Database Configuration - SQLite for automatic deployment
+DB_CONNECTION=sqlite
+DB_DATABASE=/var/www/database/database.sqlite
 
-# Optional: Use SQLite if MySQL not available
-# DB_CONNECTION=sqlite
-# DB_DATABASE=/var/www/database/database.sqlite
+# Optional: Use MySQL if you have external database
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=pikoy
+# DB_USERNAME=pikoy_user
+# DB_PASSWORD=your_secure_password_here
 
 # Other settings
 LOG_CHANNEL=stack
@@ -43,8 +43,10 @@ SESSION_DRIVER=file
 SESSION_LIFETIME=120
 ```
 
-### 3. Database Setup (Required)
-You need to setup MySQL database on your VPS:
+### 3. Database Setup (Automatic with SQLite)
+**No additional setup required!** The application uses SQLite by default for automatic deployment.
+
+If you want to use MySQL instead, follow these steps:
 
 ```bash
 # SSH to your VPS (45.127.32.237)
