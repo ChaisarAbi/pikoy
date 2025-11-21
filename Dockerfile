@@ -54,6 +54,11 @@ RUN if [ ! -f .env ]; then \
 # Create storage link (this doesn't depend on environment)
 RUN php artisan storage:link
 
+# Create database file with correct permissions
+RUN touch /var/www/database/database.sqlite && \
+    chown -R www-data:www-data /var/www/database/ && \
+    chmod -R 775 /var/www/database/
+
 # Expose port 80 for Nginx
 EXPOSE 80
 
